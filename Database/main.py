@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from openai import OpenAI
 import os
 
-# py .\Documents\Software\DailyTracking\Scripts\main.py
+# py .\Documents\Software\DailyTracking\Database\main.py
     
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GPT_MODEL = "gpt-4.1-nano"
@@ -14,18 +14,6 @@ TODAY = date.today()
 # Main 
 
 def main():
-    
-    '''
-    messages = [
-        {"role": "system", "content": "You are a personal assistant for Austin Shank, looking to improve his life."},
-        {"role": "user", "content": "Provide 20 actionable tips for improving your mental health."},
-    ]
-    '''
-    
-    #gptClient = openGptConnection()
-    #response = getGptResponse(gptClient, messages)
-    #printResponse(response)
-    
     startNewDailyNotes()
     
 # --- --- --- ---
