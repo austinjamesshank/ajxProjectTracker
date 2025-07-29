@@ -8,12 +8,6 @@ import os
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GPT_MODEL = "gpt-4.1-nano"
 
-def openGptConnection():
-    return OpenAI(
-        api_key=OPENAI_API_KEY
-    )
-
-GPT_CLIENT = openGptConnection()
 TODAY = date.today()
 
 # --- --- --- ---
@@ -21,12 +15,15 @@ TODAY = date.today()
 
 def main():
     
+    '''
     messages = [
         {"role": "system", "content": "You are a personal assistant for Austin Shank, looking to improve his life."},
         {"role": "user", "content": "Provide 20 actionable tips for improving your mental health."},
     ]
+    '''
     
-    #response = getGptResponse(client, messages)
+    #gptClient = openGptConnection()
+    #response = getGptResponse(gptClient, messages)
     #printResponse(response)
     
     startNewDailyNotes()
@@ -34,20 +31,25 @@ def main():
 # --- --- --- ---
 # ChatGPT 
 
-def promptGpt(prompts, shouldPrintResponse=False):
+def openGptConnection():
+    return OpenAI(
+        api_key=OPENAI_API_KEY
+    )
+
+def promptGpt(gptClient, prompts, shouldPrintResponse=False):
     messages = [
         {"role": "system", "content": "You are a personal assistant for Austin Shank, looking to improve his life."},
         {"role": "user", "content": prompts},
     ]
-    response = getGptResponse(messages)
+    response = getGptResponse(gptClient, messages)
     
     if shouldPrintResponse:
         printResponse(response)
     
     return response
     
-def getGptResponse(inMessages):
-    return GPT_CLIENT.chat.completions.create(
+def getGptResponse(gptClient, inMessages):
+    return gptClient.chat.completions.create(
         model=GPT_MODEL,
         messages=inMessages,
         stream=True
@@ -57,7 +59,7 @@ def printResponse(response):
     for chunk in response:
         if chunk.choices[0].delta.content is not None:
             print(chunk.choices[0].delta.content, end="", flush=True)
-    print()  # Add a newline at the end
+    print()
     
 # --- --- --- ---
 # Note file handling 
@@ -112,12 +114,24 @@ def handleOneLine(destFile,line,currentSection,currentSubsection,heldLines):
         destFile.write(line)
         return currentSection, currentSubsection
 
+    if isDayCounter(strippedLine):
+        handleDayCounter(destFile, line, strippedLine)
+        return currentSection, currentSubsection  # These should be null at this point
     # Section headers
-    if isSectionHeader(strippedLine):
+    elif isSectionHeader(strippedLine):
         return handleSectionHeader(destFile, line, strippedLine), currentSubsection
     else:
         currentSubsection = handleSectionPiece(destFile, line, strippedLine, currentSubsection, heldLines)
         return currentSection, currentSubsection
+
+def isDayCounter(strippedLine):
+    return strippedLine.startswith("~day:")
+
+def handleDayCounter(destFile, line, strippedLine):
+    numericDayCount = strippedLine.split(":")[1].strip()
+    numericDayCount = int(numericDayCount) + 1
+    updatedLine = line.split(":")[0].strip() + f":{numericDayCount}\n"
+    handleNewLine(destFile, updatedLine)
 
 def isSectionHeader(strippedLine):
     return strippedLine.startswith("#")
